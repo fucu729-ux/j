@@ -40,15 +40,24 @@
     text-shadow: 0 0 8px rgba(255, 127, 80, 0.8);
   }
 
-  /* Move progress bar to top - add margin below header for spacing */
-  /* Progress bar at the top, below header */
+  /* Progress bar at the top */
   .top-progress {
     width: 100%;
     max-width: 1000px;
     margin-top: 20px;
   }
-
-  /* Progress bar line container */
+  .progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  #top-percentage {
+    font-family: 'Archivo', sans-serif;
+    font-weight: 700;
+    font-size: 1.8em;
+    color: #FFA500;
+  }
   .progress-bar-container {
     position: relative;
     height: 20px;
@@ -56,16 +65,13 @@
     border-radius: 10px;
     overflow: hidden;
   }
-
-  .progress-bar {
+  #progress-bar {
     height: 100%;
     width: 0%;
     background: linear-gradient(90deg, #FF7F50, #FFA500);
     transition: width 1s ease;
   }
-
-  /* Percentage line indicator */
-  .percentage-line {
+  #percentage-line {
     position: absolute;
     top: 0;
     height: 20px;
@@ -74,7 +80,7 @@
     transition: left 1s ease;
   }
 
-  /* Counters container */
+  /* Counters for subjects */
   .counters {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -84,7 +90,6 @@
     margin-top: 30px;
   }
 
-  /* Each subject card */
   .card {
     background: #1a1a1a;
     border: 1px solid var(--charcoal);
@@ -111,24 +116,23 @@
     font-weight: 600;
   }
 
-  /* Counter display: current page */
+  /* Current page count with total pages */
   .counter {
     font-family: 'Archivo', sans-serif;
     font-weight: 700;
     font-variant-numeric: tabular-nums;
     font-size: clamp(2.5em, 5vw, 4em);
     color: #fff;
-    margin-bottom: 10px;
+    display: flex;
+    align-items: baseline;
   }
-  /* Add current/total after the number */
-  .counter-current {
+  .current-total {
     font-size: 0.6em;
-    display: inline-block;
     margin-left: 8px;
     color: #ccc;
   }
 
-  /* Percentage display per subject */
+  /* Percentage per subject */
   .percent {
     font-family: 'Archivo', sans-serif;
     font-weight: 500;
@@ -137,7 +141,7 @@
     margin-bottom: 12px;
   }
 
-  /* Buttons container */
+  /* Buttons */
   .buttons {
     display: flex;
     gap: 12px;
@@ -164,40 +168,8 @@
     box-shadow: 0 6px 12px rgba(0,0,0,0.3);
   }
 
-  /* Total progress styling moved to the top */
-  .total-section {
-    margin-top: 50px;
-    width: 100%;
-    max-width: 700px;
-    padding-top: 20px;
-    border-top: 1px solid var(--charcoal);
-  }
+  /* Total progress section already at top, so no need to duplicate */
 
-  .total-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 15px;
-  }
-
-  .total-title {
-    font-family: 'Archivo', sans-serif;
-    font-weight: 700;
-    font-size: clamp(1em, 2vw, 1.2em);
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    color: var(--accent);
-  }
-
-  .total-progress {
-    font-family: 'Archivo', sans-serif;
-    font-weight: 700;
-    font-variant-numeric: tabular-nums;
-    font-size: clamp(2em, 4vw, 3em);
-    color: var(--accent);
-  }
-
-  /* Responsive adjustments */
   @media(max-width: 700px){
     body { padding: 10px; }
   }
@@ -209,23 +181,28 @@
 
 <!-- Progress bar at the top -->
 <div class="top-progress" id="top-progress">
+  <div class="progress-header">
+    <div id="top-percentage">0%</div>
+  </div>
   <div class="progress-bar-container">
     <div class="progress-bar" id="progress-bar"></div>
     <div class="percentage-line" id="percentage-line"></div>
   </div>
 </div>
-<div style="margin-top:10px; font-family:'Archivo', sans-serif; font-weight:700; font-size:1.8em; color:#FFA500; text-align:center;" id="top-percentage">0%</div>
 
 <!-- Subject counters -->
 <div class="counters" id="subjects-container"></div>
 
-<!-- Total progress -->
-<div class="total-section">
+<!-- Total progress (already displayed at top) -->
+<!-- Optional: keep total percentage here or remove if only at top -->
+<!--
+<div class="total-section" style="margin-top:50px;">
   <div class="total-header">
     <div class="total-title">Overall Progress</div>
     <div class="total-progress" id="total-percentage">0%</div>
   </div>
 </div>
+-->
 
 <script>
   // Your subjects data
@@ -244,9 +221,9 @@
     card.dataset.key = sub.key;
     card.innerHTML = `
       <div class="subject">${sub.name}</div>
-      <div style="display:flex; align-items:center;">
+      <div style="display:flex; align-items:center; font-family:'Archivo', sans-serif;">
         <div class="counter" id="counter-${sub.key}">0</div>
-        <div class="counter-current" id="current-total-${sub.key}">/ ${sub.total}</div>
+        <div class="current-total">/ ${sub.total}</div>
       </div>
       <div class="percent" id="percent-${sub.key}">0%</div>
       <div class="buttons">
@@ -263,6 +240,9 @@
     document.getElementById(`counter-${key}`).textContent = count;
     const percent = (subject.total > 0) ? (count / subject.total) * 100 : 0;
     document.getElementById(`percent-${key}`).textContent = percent.toFixed(1) + '%';
+
+    // Update overall progress
+    updateProgress();
   }
 
   // Calculate total progress
@@ -276,25 +256,23 @@
     return { totalPages, totalRead };
   }
 
-  // Update progress bar at top
+  // Update top progress bar and percentage
   function updateProgress() {
     const { totalPages, totalRead } = calculateTotal();
     const percent = totalPages ? (totalRead / totalPages) * 100 : 0;
     const percentRounded = percent.toFixed(1);
-
-    // Update top percentage
     document.getElementById('top-percentage').textContent = percentRounded + '%';
 
     // Animate progress bar
-    const progressBar = document.getElementById('progress-bar');
-    progressBar.style.width = percent + '%';
+    const bar = document.getElementById('progress-bar');
+    bar.style.width = percent + '%';
 
     // Animate percentage line position
     const line = document.getElementById('percentage-line');
     line.style.left = percent + '%';
 
-    // Also update total overall percentage
-    document.getElementById('total-percentage').textContent = percentRounded + '%';
+    // If you want, also update total percentage elsewhere
+    // document.getElementById('total-percentage').textContent = percentRounded + '%';
   }
 
   // Event listeners for buttons
@@ -310,12 +288,12 @@
         if (subject.count > 0) subject.count--;
       }
       updateSubjectDisplay(key, subject.count);
-      updateProgress();
     });
   });
 
   // Initialize display
   subjects.forEach(s => updateSubjectDisplay(s.key, s.count));
+  // Set initial progress
   updateProgress();
 </script>
 
