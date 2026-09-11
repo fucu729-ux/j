@@ -168,8 +168,6 @@
     box-shadow: 0 6px 12px rgba(0,0,0,0.3);
   }
 
-  /* Total progress section already at top, so no need to duplicate */
-
   @media(max-width: 700px){
     body { padding: 10px; }
   }
@@ -193,17 +191,6 @@
 <!-- Subject counters -->
 <div class="counters" id="subjects-container"></div>
 
-<!-- Total progress (already displayed at top) -->
-<!-- Optional: keep total percentage here or remove if only at top -->
-<!--
-<div class="total-section" style="margin-top:50px;">
-  <div class="total-header">
-    <div class="total-title">Overall Progress</div>
-    <div class="total-progress" id="total-percentage">0%</div>
-  </div>
-</div>
--->
-
 <script>
   // Your subjects data
   const subjects = [
@@ -211,6 +198,37 @@
     { key: 'physics', name: 'Physics', total: 94, count: 0 },
     { key: 'chemistry', name: 'Chemistry', total: 86, count: 0 }
   ];
+
+  const storageKey = 'aLevelProgress';
+
+  // Load saved data from localStorage
+  function loadProgress() {
+    const saved = localStorage.getItem(storageKey);
+    if (saved) {
+      try {
+        const data = JSON.parse(saved);
+        if (data && typeof data === 'object') {
+          for (const key in data) {
+            const s = subjects.find(sub => sub.key === key);
+            if (s && typeof data[key] === 'number') {
+              s.count = Math.min(s.total, Math.max(0, data[key]));
+            }
+          }
+        }
+      } catch(e) {
+        // ignore parse errors
+      }
+    }
+  }
+
+  // Save progress to localStorage
+  function saveProgress() {
+    const data = {};
+    subjects.forEach(s => {
+      data[s.key] = s.count;
+    });
+    localStorage.setItem(storageKey, JSON.stringify(data));
+  }
 
   const container = document.getElementById('subjects-container');
 
@@ -234,14 +252,12 @@
     container.appendChild(card);
   });
 
-  // Update individual subject display
+  // Update display
   function updateSubjectDisplay(key, count) {
     const subject = subjects.find(s => s.key === key);
     document.getElementById(`counter-${key}`).textContent = count;
     const percent = (subject.total > 0) ? (count / subject.total) * 100 : 0;
     document.getElementById(`percent-${key}`).textContent = percent.toFixed(1) + '%';
-
-    // Update overall progress
     updateProgress();
   }
 
@@ -270,9 +286,6 @@
     // Animate percentage line position
     const line = document.getElementById('percentage-line');
     line.style.left = percent + '%';
-
-    // If you want, also update total percentage elsewhere
-    // document.getElementById('total-percentage').textContent = percentRounded + '%';
   }
 
   // Event listeners for buttons
@@ -280,20 +293,21 @@
     btn.addEventListener('click', () => {
       const action = btn.dataset.action;
       const key = btn.dataset.key;
-      const subject = subjects.find(s => s.key === key);
-      if (!subject) return;
+      const s = subjects.find(s => s.key === key);
+      if (!s) return;
       if (action === 'increase') {
-        if (subject.count < subject.total) subject.count++;
+        if (s.count < s.total) s.count++;
       } else if (action === 'decrease') {
-        if (subject.count > 0) subject.count--;
+        if (s.count > 0) s.count--;
       }
-      updateSubjectDisplay(key, subject.count);
+      updateSubjectDisplay(key, s.count);
+      saveProgress();
     });
   });
 
-  // Initialize display
+  // Load saved data and initialize
+  loadProgress();
   subjects.forEach(s => updateSubjectDisplay(s.key, s.count));
-  // Set initial progress
   updateProgress();
 </script>
 
