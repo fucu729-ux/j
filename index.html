@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>A Levels Progress Tracker</title>
+<!-- Google Fonts for a modern look -->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700&family=IBM+Plex+Mono:wght@400;500&display=swap" />
+<style>
+  :root {
+    --primary: #FF7F50; /* Coral Orange */
+    --charcoal: #222; /* Charcoal black */
+    --light-charcoal: #333; /* Slightly lighter for backgrounds */
+    --accent: #FFA500; /* Bright orange for accents */
+    --background-gradient: linear-gradient(135deg, #222, #444);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--background-gradient);
+    color: #fff;
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: clamp(20px, 5vw, 64px);
+    line-height: 1.4;
+  }
+
+  h1 {
+    font-family: 'Archivo', sans-serif;
+    font-weight: 700;
+    font-size: clamp(2em, 4vw, 3em);
+    margin-bottom: 20px;
+    color: var(--accent);
+    text-shadow: 0 0 8px rgba(255, 127, 80, 0.8);
+  }
+
+  /* Move progress bar to top - add margin below header for spacing */
+  /* Progress bar at the top, below header */
+  .top-progress {
+    width: 100%;
+    max-width: 1000px;
+    margin-top: 20px;
+  }
+
+  /* Progress bar line container */
+  .progress-bar-container {
+    position: relative;
+    height: 20px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .progress-bar {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #FF7F50, #FFA500);
+    transition: width 1s ease;
+  }
+
+  /* Percentage line indicator */
+  .percentage-line {
+    position: absolute;
+    top: 0;
+    height: 20px;
+    width: 0%;
+    border-left: 2px solid var(--accent);
+    transition: left 1s ease;
+  }
+
+  /* Counters container */
+  .counters {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    width: 100%;
+    max-width: 1000px;
+    margin-top: 30px;
+  }
+
+  /* Each subject card */
+  .card {
+    background: #1a1a1a;
+    border: 1px solid var(--charcoal);
+    border-radius: 20px;
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition: transform 0.3s, box-shadow 0.3s;
+  }
+
+  .card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 12px 24px rgba(0,0,0,0.5);
+  }
+
+  .subject {
+    font-size: clamp(1em, 2vw, 1.2em);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 15px;
+    font-weight: 600;
+  }
+
+  /* Counter display: current page */
+  .counter {
+    font-family: 'Archivo', sans-serif;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    font-size: clamp(2.5em, 5vw, 4em);
+    color: #fff;
+    margin-bottom: 10px;
+  }
+  /* Add current/total after the number */
+  .counter-current {
+    font-size: 0.6em;
+    display: inline-block;
+    margin-left: 8px;
+    color: #ccc;
+  }
+
+  /* Percentage display per subject */
+  .percent {
+    font-family: 'Archivo', sans-serif;
+    font-weight: 500;
+    font-size: clamp(1em, 1.8vw, 2em);
+    color: #ccc;
+    margin-bottom: 12px;
+  }
+
+  /* Buttons container */
+  .buttons {
+    display: flex;
+    gap: 12px;
+    margin-top: 12px;
+  }
+
+  button {
+    min-width: 50px;
+    min-height: 50px;
+    border: none;
+    border-radius: 12px;
+    background: var(--primary);
+    color: #fff;
+    font-size: 1.6em;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    transition: background 0.3s, transform 0.2s, box-shadow 0.3s;
+  }
+
+  button:hover {
+    background: var(--accent);
+    transform: scale(1.05);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+  }
+
+  /* Total progress styling moved to the top */
+  .total-section {
+    margin-top: 50px;
+    width: 100%;
+    max-width: 700px;
+    padding-top: 20px;
+    border-top: 1px solid var(--charcoal);
+  }
+
+  .total-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+  }
+
+  .total-title {
+    font-family: 'Archivo', sans-serif;
+    font-weight: 700;
+    font-size: clamp(1em, 2vw, 1.2em);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  .total-progress {
+    font-family: 'Archivo', sans-serif;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    font-size: clamp(2em, 4vw, 3em);
+    color: var(--accent);
+  }
+
+  /* Responsive adjustments */
+  @media(max-width: 700px){
+    body { padding: 10px; }
+  }
+</style>
+</head>
+<body>
+
+<h1>A Levels Progress Tracker</h1>
+
+<!-- Progress bar at the top -->
+<div class="top-progress" id="top-progress">
+  <div class="progress-bar-container">
+    <div class="progress-bar" id="progress-bar"></div>
+    <div class="percentage-line" id="percentage-line"></div>
+  </div>
+</div>
+<div style="margin-top:10px; font-family:'Archivo', sans-serif; font-weight:700; font-size:1.8em; color:#FFA500; text-align:center;" id="top-percentage">0%</div>
+
+<!-- Subject counters -->
+<div class="counters" id="subjects-container"></div>
+
+<!-- Total progress -->
+<div class="total-section">
+  <div class="total-header">
+    <div class="total-title">Overall Progress</div>
+    <div class="total-progress" id="total-percentage">0%</div>
+  </div>
+</div>
+
+<script>
+  // Your subjects data
+  const subjects = [
+    { key: 'maths', name: 'Maths', total: 118, count: 0 },
+    { key: 'physics', name: 'Physics', total: 94, count: 0 },
+    { key: 'chemistry', name: 'Chemistry', total: 86, count: 0 }
+  ];
+
+  const container = document.getElementById('subjects-container');
+
+  // Generate subject cards dynamically
+  subjects.forEach(sub => {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.dataset.key = sub.key;
+    card.innerHTML = `
+      <div class="subject">${sub.name}</div>
+      <div style="display:flex; align-items:center;">
+        <div class="counter" id="counter-${sub.key}">0</div>
+        <div class="counter-current" id="current-total-${sub.key}">/ ${sub.total}</div>
+      </div>
+      <div class="percent" id="percent-${sub.key}">0%</div>
+      <div class="buttons">
+        <button data-action="decrease" data-key="${sub.key}">−</button>
+        <button data-action="increase" data-key="${sub.key}">+</button>
+      </div>
+    `;
+    container.appendChild(card);
+  });
+
+  // Update individual subject display
+  function updateSubjectDisplay(key, count) {
+    const subject = subjects.find(s => s.key === key);
+    document.getElementById(`counter-${key}`).textContent = count;
+    const percent = (subject.total > 0) ? (count / subject.total) * 100 : 0;
+    document.getElementById(`percent-${key}`).textContent = percent.toFixed(1) + '%';
+  }
+
+  // Calculate total progress
+  function calculateTotal() {
+    let totalPages = 0;
+    let totalRead = 0;
+    subjects.forEach(s => {
+      totalPages += s.total;
+      totalRead += s.count;
+    });
+    return { totalPages, totalRead };
+  }
+
+  // Update progress bar at top
+  function updateProgress() {
+    const { totalPages, totalRead } = calculateTotal();
+    const percent = totalPages ? (totalRead / totalPages) * 100 : 0;
+    const percentRounded = percent.toFixed(1);
+
+    // Update top percentage
+    document.getElementById('top-percentage').textContent = percentRounded + '%';
+
+    // Animate progress bar
+    const progressBar = document.getElementById('progress-bar');
+    progressBar.style.width = percent + '%';
+
+    // Animate percentage line position
+    const line = document.getElementById('percentage-line');
+    line.style.left = percent + '%';
+
+    // Also update total overall percentage
+    document.getElementById('total-percentage').textContent = percentRounded + '%';
+  }
+
+  // Event listeners for buttons
+  document.querySelectorAll('.buttons button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const action = btn.dataset.action;
+      const key = btn.dataset.key;
+      const subject = subjects.find(s => s.key === key);
+      if (!subject) return;
+      if (action === 'increase') {
+        if (subject.count < subject.total) subject.count++;
+      } else if (action === 'decrease') {
+        if (subject.count > 0) subject.count--;
+      }
+      updateSubjectDisplay(key, subject.count);
+      updateProgress();
+    });
+  });
+
+  // Initialize display
+  subjects.forEach(s => updateSubjectDisplay(s.key, s.count));
+  updateProgress();
+</script>
+
+</body>
+</html>
